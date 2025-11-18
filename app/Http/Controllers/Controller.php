@@ -9,7 +9,7 @@ use OpenApi\Annotations as OA;
 
 /**
  * @OA\Info(
- *     title="Interventio Tech API",
+ *     title="Interventio Tech API Documentation",
  *     version="1.0.0",
  *     description="API pour la plateforme Interventio Tech",
  *
@@ -19,11 +19,11 @@ use OpenApi\Annotations as OA;
  * )
  *
  * @OA\Server(
- *     url="http://interventio-tech.test/api",
+ *     url="http://interventio-tech.test",
  *     description="Serveur de développement local"
  * )
  * @OA\Server(
- *     url="https://api.interventio-tech.com/api",
+ *     url="https://api.interventio-tech.com",
  *     description="Serveur de production"
  * )
  *

@@ -20,7 +20,6 @@ final class RoutingBootstrapper
         RateLimiter::for('api', fn(Request $request) => Limit::perMinute(60)->by($request->user()?->id ?: $request->ip()));
 
         $router->middleware('api')
-            ->prefix('api')
             ->group(base_path(path: 'routes/api/index.php'));
 
         $router->middleware('web')
