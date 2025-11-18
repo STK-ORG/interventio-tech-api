@@ -78,7 +78,7 @@ EOF
 if [ -z "$APP_KEY" ]; then
     echo "🔑 Generating application key..."
     php artisan key:generate --force --no-interaction
-    
+
     # Relire le .env pour récupérer la nouvelle clé
     export APP_KEY=$(grep "^APP_KEY=" .env | cut -d '=' -f2-)
     echo "✅ Application key generated: ${APP_KEY:0:20}..."
