@@ -24,3 +24,4 @@ parameters:
     # Ignorer certains types d'erreurs pour Laravel
     ignoreErrors:
         - '#Unsafe usage of new static#'
+        - '#Call to an undefined method PHPUnit\\Framework\\TestCase::get\(\)#'

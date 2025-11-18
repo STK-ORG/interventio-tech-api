@@ -6,22 +6,19 @@ namespace App\Helpers\Routes;
 
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
+use SplFileInfo;
 
 final class RouteHelper
 {
     public static function includeRouteFiles(string $directory): void
     {
         $directoryIterator = new RecursiveDirectoryIterator($directory);
-
-        /** @var RecursiveDirectoryIterator|RecursiveIteratorIterator $iterator */
         $iterator = new RecursiveIteratorIterator($directoryIterator);
 
-        while ($iterator->valid()) {
-            if (!$iterator->isDot() && $iterator->isFile() && $iterator->isReadable() && $iterator->current()->getExtension() === 'php') {
-                require $iterator->key();
+        foreach ($iterator as $file) {
+            if ($file instanceof SplFileInfo && $file->isFile() && $file->isReadable() && $file->getExtension() === 'php') {
+                require $file->getPathname();
             }
-
-            $iterator->next();
         }
     }
 }

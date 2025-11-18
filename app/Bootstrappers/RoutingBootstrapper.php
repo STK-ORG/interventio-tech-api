@@ -21,13 +21,13 @@ final class RoutingBootstrapper
 
         $router->middleware('api')
             ->prefix('api')
-            ->group(base_path(path: 'routes/api/routes.php'));
+            ->group(base_path(path: 'routes/api/index.php'));
 
         $router->middleware('web')
-            ->group(base_path(path: 'routes/web/routes.php'));
+            ->group(base_path(path: 'routes/web/index.php'));
 
         $router->middleware('web')
-            ->group(base_path(path: 'routes/console/routes.php'));
+            ->group(base_path(path: 'routes/console/index.php'));
 
         $router->middleware('web')
             ->get('up', function () {
@@ -42,9 +42,8 @@ final class RoutingBootstrapper
 
         Broadcast::routes(['middleware' => ['auth:sanctum']]);
 
-        if (file_exists($path = base_path('routes/channels/routes.php'))) {
+        if (file_exists($path = base_path('routes/channels/index.php'))) {
             require $path;
         }
-
     }
 }
