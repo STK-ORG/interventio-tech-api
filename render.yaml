@@ -33,7 +33,12 @@ services:
       # Base de données (PostgreSQL)
       - key: DB_CONNECTION
         value: pgsql
-      # Variables individuelles de la base de données
+      # URL interne de la base de données (à définir manuellement dans Render dashboard)
+      # Format: postgresql://user:password@host:port/database
+      # Utilisez l'Internal Database URL depuis le dashboard Render
+      - key: INTERNAL_DATABASE_URL
+        sync: false
+      # Variables individuelles de la base de données (fallback)
       - key: DB_HOST
         fromDatabase:
           name: interventio-db
