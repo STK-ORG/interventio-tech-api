@@ -14,6 +14,8 @@ echo "📁 Creating storage directories..."
 mkdir -p /var/www/html/storage/framework/{sessions,views,cache}
 mkdir -p /var/www/html/storage/logs
 mkdir -p /var/www/html/bootstrap/cache
+mkdir -p /var/log/supervisor
+mkdir -p /var/run
 
 # Définir les permissions
 echo "🔒 Setting permissions..."
