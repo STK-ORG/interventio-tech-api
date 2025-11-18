@@ -33,32 +33,12 @@ services:
       # Base de données (PostgreSQL)
       - key: DB_CONNECTION
         value: pgsql
-      # URL interne de la base de données (à définir manuellement dans Render dashboard)
-      # Format: postgresql://user:password@host:port/database
-      # Utilisez l'Internal Database URL depuis le dashboard Render
+      # URL interne de la base de données
+      # Render ne passe pas automatiquement les variables fromDatabase au conteneur Docker
+      # Il faut définir cette variable manuellement dans le dashboard Render
+      # ou utiliser l'URL complète ici (moins sécurisé mais fonctionnel)
       - key: INTERNAL_DATABASE_URL
-        sync: false
-      # Variables individuelles de la base de données (fallback)
-      - key: DB_HOST
-        fromDatabase:
-          name: interventio-db
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: interventio-db
-          property: port
-      - key: DB_DATABASE
-        fromDatabase:
-          name: interventio-db
-          property: database
-      - key: DB_USERNAME
-        fromDatabase:
-          name: interventio-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: interventio-db
-          property: password
+        value: postgresql://interventio_tech_user:LIgM1En6Bp1qS66i6lfXJVJqbKxv8sGf@dpg-d4e90ingi27c73ci2sog-a/interventio_tech
 
       # Cache (file par défaut, Redis pour production)
       - key: CACHE_STORE
