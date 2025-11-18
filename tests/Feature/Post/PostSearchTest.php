@@ -58,7 +58,7 @@ beforeEach(function (): void {
 });
 
 it('searches posts by title in english', function (): void {
-    $response = getJson('/api/v1/posts?filter[search]=Laravel', [
+    $response = getJson('/v1/posts?filter[search]=Laravel', [
         'Accept-Language' => 'en',
     ]);
 
@@ -72,7 +72,7 @@ it('searches posts by title in english', function (): void {
 });
 
 it('searches posts by title in french', function (): void {
-    $response = getJson('/api/v1/posts?filter[search]=Laravel', [
+    $response = getJson('/v1/posts?filter[search]=Laravel', [
         'Accept-Language' => 'fr',
     ]);
 
@@ -86,7 +86,7 @@ it('searches posts by title in french', function (): void {
 });
 
 it('searches posts by content', function (): void {
-    $response = getJson('/api/v1/posts?filter[search]=framework');
+    $response = getJson('/v1/posts?filter[search]=framework');
 
     $response->assertSuccessful();
 
@@ -95,9 +95,9 @@ it('searches posts by content', function (): void {
 });
 
 it('is case insensitive in search', function (): void {
-    $response1 = getJson('/api/v1/posts?filter[search]=laravel');
-    $response2 = getJson('/api/v1/posts?filter[search]=LARAVEL');
-    $response3 = getJson('/api/v1/posts?filter[search]=LaRaVeL');
+    $response1 = getJson('/v1/posts?filter[search]=laravel');
+    $response2 = getJson('/v1/posts?filter[search]=LARAVEL');
+    $response3 = getJson('/v1/posts?filter[search]=LaRaVeL');
 
     $response1->assertSuccessful();
     $response2->assertSuccessful();
@@ -108,7 +108,7 @@ it('is case insensitive in search', function (): void {
 });
 
 it('returns empty results for non-existent search', function (): void {
-    $response = getJson('/api/v1/posts?filter[search]=NonExistentKeyword123');
+    $response = getJson('/v1/posts?filter[search]=NonExistentKeyword123');
 
     $response->assertSuccessful();
     expect($response->json('data'))->toHaveCount(0);
@@ -118,7 +118,7 @@ it('filters posts by user id', function (): void {
     $user = User::factory()->create();
     Post::factory()->published()->count(3)->create(['user_id' => $user->id]);
 
-    $response = getJson("/api/v1/posts?filter[user_id]={$user->id}");
+    $response = getJson("/v1/posts?filter[user_id]={$user->id}");
 
     $response->assertSuccessful();
 
@@ -127,7 +127,7 @@ it('filters posts by user id', function (): void {
 });
 
 it('sorts posts by published date descending', function (): void {
-    $response = getJson('/api/v1/posts?sort=-published_at');
+    $response = getJson('/v1/posts?sort=-published_at');
 
     $response->assertSuccessful();
 
@@ -143,7 +143,7 @@ it('sorts posts by published date descending', function (): void {
 });
 
 it('sorts posts by views count descending', function (): void {
-    $response = getJson('/api/v1/posts?sort=-views_count');
+    $response = getJson('/v1/posts?sort=-views_count');
 
     $response->assertSuccessful();
 
@@ -158,7 +158,7 @@ it('sorts posts by views count descending', function (): void {
 });
 
 it('sorts posts by creation date ascending', function (): void {
-    $response = getJson('/api/v1/posts?sort=created_at');
+    $response = getJson('/v1/posts?sort=created_at');
 
     $response->assertSuccessful();
 
@@ -173,7 +173,7 @@ it('sorts posts by creation date ascending', function (): void {
 });
 
 it('applies default sort when none specified', function (): void {
-    $response = getJson('/api/v1/posts');
+    $response = getJson('/v1/posts');
 
     $response->assertSuccessful();
 
@@ -200,7 +200,7 @@ it('paginates search results', function (): void {
         ],
     ]);
 
-    $response = getJson('/api/v1/posts?filter[search]=Test&per_page=5');
+    $response = getJson('/v1/posts?filter[search]=Test&per_page=5');
 
     $response->assertSuccessful()
         ->assertJsonStructure([
@@ -214,7 +214,7 @@ it('paginates search results', function (): void {
 });
 
 it('includes author in search results when requested', function (): void {
-    $response = getJson('/api/v1/posts?filter[search]=Laravel&include=user');
+    $response = getJson('/v1/posts?filter[search]=Laravel&include=user');
 
     $response->assertSuccessful()
         ->assertJsonStructure([
@@ -227,7 +227,7 @@ it('includes author in search results when requested', function (): void {
 });
 
 it('combines search, filter, sort, and pagination', function (): void {
-    $response = getJson('/api/v1/posts?filter[search]=Laravel&sort=-views_count&per_page=2&page=1');
+    $response = getJson('/v1/posts?filter[search]=Laravel&sort=-views_count&per_page=2&page=1');
 
     $response->assertSuccessful();
 
@@ -254,7 +254,7 @@ it('searches in both title and content', function (): void {
         ],
     ]);
 
-    $response = getJson('/api/v1/posts?filter[search]=unique');
+    $response = getJson('/v1/posts?filter[search]=unique');
 
     $response->assertSuccessful();
     expect(count($response->json('data')))->toBeGreaterThanOrEqual(1);
@@ -272,14 +272,14 @@ it('handles special characters in search', function (): void {
         ],
     ]);
 
-    $response = getJson('/api/v1/posts?filter[search]=C++');
+    $response = getJson('/v1/posts?filter[search]=C++');
 
     $response->assertSuccessful();
     // Devrait gérer les caractères spéciaux sans erreur
 });
 
 it('returns posts with multilingue content correctly formatted', function (): void {
-    $response = getJson('/api/v1/posts?filter[search]=Laravel');
+    $response = getJson('/v1/posts?filter[search]=Laravel');
 
     $response->assertSuccessful();
 

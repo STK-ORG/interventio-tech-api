@@ -19,7 +19,7 @@ beforeEach(function (): void {
 
 it('returns authenticated user profile', function (): void {
     $response = actingAs($this->user)
-        ->getJson('/api/v1/users/me');
+        ->getJson('/v1/users/me');
 
     $response->assertSuccessful()
         ->assertJsonStructure([
@@ -44,7 +44,7 @@ it('supports including professional profile', function (): void {
     $user = User::factory()->professional()->create();
 
     $response = actingAs($user)
-        ->getJson('/api/v1/users/me?include=professionalProfile');
+        ->getJson('/v1/users/me?include=professionalProfile');
 
     $response->assertSuccessful()
         ->assertJsonStructure([
@@ -60,7 +60,7 @@ it('supports including companies', function (): void {
     Company::factory()->count(2)->create(['user_id' => $this->user->id]);
 
     $response = actingAs($this->user)
-        ->getJson('/api/v1/users/me?include=companies');
+        ->getJson('/v1/users/me?include=companies');
 
     $response->assertSuccessful()
         ->assertJsonStructure([
@@ -75,7 +75,7 @@ it('supports including posts', function (): void {
     Post::factory()->count(3)->create(['user_id' => $this->user->id]);
 
     $response = actingAs($this->user)
-        ->getJson('/api/v1/users/me?include=posts');
+        ->getJson('/v1/users/me?include=posts');
 
     $response->assertSuccessful()
         ->assertJsonStructure([
@@ -92,7 +92,7 @@ it('supports including multiple relations', function (): void {
     Post::factory()->count(3)->create(['user_id' => $user->id]);
 
     $response = actingAs($user)
-        ->getJson('/api/v1/users/me?include=professionalProfile,companies,posts');
+        ->getJson('/v1/users/me?include=professionalProfile,companies,posts');
 
     $response->assertSuccessful()
         ->assertJsonStructure([
@@ -105,14 +105,14 @@ it('supports including multiple relations', function (): void {
 });
 
 it('requires authentication', function (): void {
-    $response = getJson('/api/v1/users/me');
+    $response = getJson('/v1/users/me');
 
     $response->assertUnauthorized();
 });
 
 it('updates user profile', function (): void {
     $response = actingAs($this->user)
-        ->putJson('/api/v1/users/me', [
+        ->putJson('/v1/users/me', [
             'name'    => 'Updated Name',
             'email'   => 'updated@example.com',
             'address' => 'New Address',
@@ -134,7 +134,7 @@ it('updates user profile', function (): void {
 
 it('updates user password', function (): void {
     $response = actingAs($this->user)
-        ->putJson('/api/v1/users/me', [
+        ->putJson('/v1/users/me', [
             'password'              => 'NewPassword123!',
             'password_confirmation' => 'NewPassword123!',
         ]);
@@ -142,7 +142,7 @@ it('updates user password', function (): void {
     $response->assertSuccessful();
 
     // Vérifier que le nouveau mot de passe fonctionne
-    $loginResponse = postJson('/api/v1/auth/login', [
+    $loginResponse = postJson('/v1/auth/login', [
         'email'    => $this->user->email,
         'password' => 'NewPassword123!',
     ]);
@@ -154,7 +154,7 @@ it('validates email uniqueness on update', function (): void {
     $otherUser = User::factory()->create(['email' => 'other@example.com']);
 
     $response = actingAs($this->user)
-        ->putJson('/api/v1/users/me', [
+        ->putJson('/v1/users/me', [
             'email' => 'other@example.com',
         ]);
 
@@ -166,7 +166,7 @@ it('uploads user avatar', function (): void {
     $file = UploadedFile::fake()->image('avatar.jpg', 500, 500);
 
     $response = actingAs($this->user)
-        ->postJson('/api/v1/users/me/avatar', [
+        ->postJson('/v1/users/me/avatar', [
             'avatar' => $file,
         ]);
 
@@ -187,11 +187,11 @@ it('uploads user avatar', function (): void {
 it('replaces existing avatar on upload', function (): void {
     // Upload premier avatar
     $file1 = UploadedFile::fake()->image('avatar1.jpg');
-    actingAs($this->user)->postJson('/api/v1/users/me/avatar', ['avatar' => $file1]);
+    actingAs($this->user)->postJson('/v1/users/me/avatar', ['avatar' => $file1]);
 
     // Upload deuxième avatar
     $file2 = UploadedFile::fake()->image('avatar2.jpg');
-    $response = actingAs($this->user)->postJson('/api/v1/users/me/avatar', ['avatar' => $file2]);
+    $response = actingAs($this->user)->postJson('/v1/users/me/avatar', ['avatar' => $file2]);
 
     $response->assertSuccessful();
 
@@ -204,7 +204,7 @@ it('validates avatar file type', function (): void {
     $file = UploadedFile::fake()->create('document.pdf', 1000);
 
     $response = actingAs($this->user)
-        ->postJson('/api/v1/users/me/avatar', [
+        ->postJson('/v1/users/me/avatar', [
             'avatar' => $file,
         ]);
 
@@ -216,7 +216,7 @@ it('validates avatar file size', function (): void {
     $file = UploadedFile::fake()->image('huge-avatar.jpg')->size(5000); // 5MB
 
     $response = actingAs($this->user)
-        ->postJson('/api/v1/users/me/avatar', [
+        ->postJson('/v1/users/me/avatar', [
             'avatar' => $file,
         ]);
 
@@ -227,11 +227,11 @@ it('validates avatar file size', function (): void {
 it('deletes user avatar', function (): void {
     // D'abord uploader un avatar
     $file = UploadedFile::fake()->image('avatar.jpg');
-    actingAs($this->user)->postJson('/api/v1/users/me/avatar', ['avatar' => $file]);
+    actingAs($this->user)->postJson('/v1/users/me/avatar', ['avatar' => $file]);
 
     // Ensuite le supprimer
     $response = actingAs($this->user)
-        ->deleteJson('/api/v1/users/me/avatar');
+        ->deleteJson('/v1/users/me/avatar');
 
     $response->assertSuccessful()
         ->assertJson([
@@ -247,14 +247,14 @@ it('deletes user avatar', function (): void {
 
 it('handles deleting non-existent avatar gracefully', function (): void {
     $response = actingAs($this->user)
-        ->deleteJson('/api/v1/users/me/avatar');
+        ->deleteJson('/v1/users/me/avatar');
 
     $response->assertSuccessful();
 });
 
 it('supports french language in profile responses', function (): void {
     $response = actingAs($this->user)
-        ->putJson('/api/v1/users/me', [
+        ->putJson('/v1/users/me', [
             'name' => 'Updated Name',
         ], ['Accept-Language' => 'fr']);
 
@@ -266,7 +266,7 @@ it('supports selective includes on profile update', function (): void {
     $user = User::factory()->professional()->create();
 
     $response = actingAs($user)
-        ->putJson('/api/v1/users/me?include=professionalProfile', [
+        ->putJson('/v1/users/me?include=professionalProfile', [
             'name' => 'Updated Name',
         ]);
 

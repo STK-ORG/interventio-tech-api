@@ -9,7 +9,7 @@ use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\postJson;
 
 beforeEach(function (): void {
-    $this->endpoint = '/api/v1/auth/register';
+    $this->endpoint = '/v1/auth/register';
 });
 
 it('allows a user to register with private account', function (): void {

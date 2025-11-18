@@ -21,7 +21,7 @@ beforeEach(function (): void {
 it('lists all posts', function (): void {
     Post::factory()->published()->count(5)->create();
 
-    $response = getJson('/api/v1/posts');
+    $response = getJson('/v1/posts');
 
     $response->assertSuccessful()
         ->assertJsonStructure([
@@ -42,7 +42,7 @@ it('lists all posts', function (): void {
 it('shows a specific post by slug', function (): void {
     $post = Post::factory()->published()->create(['slug' => 'test-post-123']);
 
-    $response = getJson('/api/v1/posts/test-post-123');
+    $response = getJson('/v1/posts/test-post-123');
 
     $response->assertSuccessful()
         ->assertJson([
@@ -54,7 +54,7 @@ it('shows a specific post by slug', function (): void {
 it('increments view count when viewing post', function (): void {
     $post = Post::factory()->published()->create(['views_count' => 10]);
 
-    $response = getJson("/api/v1/posts/{$post->slug}");
+    $response = getJson("/v1/posts/{$post->slug}");
 
     $response->assertSuccessful();
 
@@ -65,7 +65,7 @@ it('increments view count when viewing post', function (): void {
 it('supports including author in post details', function (): void {
     $post = Post::factory()->published()->create();
 
-    $response = getJson("/api/v1/posts/{$post->slug}?include=user");
+    $response = getJson("/v1/posts/{$post->slug}?include=user");
 
     $response->assertSuccessful()
         ->assertJsonStructure([
@@ -79,7 +79,7 @@ it('supports including author in post details', function (): void {
 
 it('allows authenticated users to create a post', function (): void {
     $response = actingAs($this->user)
-        ->postJson('/api/v1/posts', [
+        ->postJson('/v1/posts', [
             'title' => [
                 'en' => 'My First Post',
                 'fr' => 'Mon Premier Article',
@@ -110,7 +110,7 @@ it('allows authenticated users to create a post', function (): void {
 });
 
 it('requires authentication to create post', function (): void {
-    $response = postJson('/api/v1/posts', [
+    $response = postJson('/v1/posts', [
         'title' => [
             'en' => 'Test',
             'fr' => 'Test',
@@ -127,7 +127,7 @@ it('requires authentication to create post', function (): void {
 
 it('validates required fields when creating post', function (): void {
     $response = actingAs($this->user)
-        ->postJson('/api/v1/posts', []);
+        ->postJson('/v1/posts', []);
 
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['title', 'content', 'status']);
@@ -135,7 +135,7 @@ it('validates required fields when creating post', function (): void {
 
 it('validates multilingual title fields', function (): void {
     $response = actingAs($this->user)
-        ->postJson('/api/v1/posts', [
+        ->postJson('/v1/posts', [
             'title' => [
                 'en' => 'English Title',
                 // Manque 'fr'
@@ -153,7 +153,7 @@ it('validates multilingual title fields', function (): void {
 
 it('automatically generates unique slug from title', function (): void {
     $response = actingAs($this->user)
-        ->postJson('/api/v1/posts', [
+        ->postJson('/v1/posts', [
             'title' => [
                 'en' => 'My Amazing Post',
                 'fr' => 'Mon Article Incroyable',
@@ -179,7 +179,7 @@ it('ensures slug uniqueness', function (): void {
     ]);
 
     $response = actingAs($this->user)
-        ->postJson('/api/v1/posts', [
+        ->postJson('/v1/posts', [
             'title' => [
                 'en' => 'Test Post',
                 'fr' => 'Article Test',
@@ -202,7 +202,7 @@ it('uploads featured image when creating post', function (): void {
     $image = UploadedFile::fake()->image('featured.jpg', 800, 600);
 
     $response = actingAs($this->user)
-        ->postJson('/api/v1/posts', [
+        ->postJson('/v1/posts', [
             'title' => [
                 'en' => 'Post with Image',
                 'fr' => 'Article avec Image',
@@ -226,7 +226,7 @@ it('uploads gallery images when creating post', function (): void {
     $image2 = UploadedFile::fake()->image('gallery2.jpg');
 
     $response = actingAs($this->user)
-        ->postJson('/api/v1/posts', [
+        ->postJson('/v1/posts', [
             'title' => [
                 'en' => 'Post with Gallery',
                 'fr' => 'Article avec Galerie',
@@ -249,7 +249,7 @@ it('allows owner to update their post', function (): void {
     $post = Post::factory()->create(['user_id' => $this->user->id]);
 
     $response = actingAs($this->user)
-        ->putJson("/api/v1/posts/{$post->slug}", [
+        ->putJson("/v1/posts/{$post->slug}", [
             'title' => [
                 'en' => 'Updated Title',
                 'fr' => 'Titre Mis à Jour',
@@ -282,7 +282,7 @@ it('updates slug when title changes', function (): void {
     ]);
 
     $response = actingAs($this->user)
-        ->putJson("/api/v1/posts/{$post->slug}", [
+        ->putJson("/v1/posts/{$post->slug}", [
             'title' => [
                 'en' => 'New Amazing Title',
                 'fr' => 'Nouveau Titre Incroyable',
@@ -300,7 +300,7 @@ it('prevents non-owner from updating post', function (): void {
     $otherUser = User::factory()->create();
 
     $response = actingAs($otherUser)
-        ->putJson("/api/v1/posts/{$post->slug}", [
+        ->putJson("/v1/posts/{$post->slug}", [
             'title' => [
                 'en' => 'Hacked Title',
                 'fr' => 'Titre Piraté',
@@ -314,7 +314,7 @@ it('allows owner to delete their post', function (): void {
     $post = Post::factory()->create(['user_id' => $this->user->id]);
 
     $response = actingAs($this->user)
-        ->deleteJson("/api/v1/posts/{$post->slug}");
+        ->deleteJson("/v1/posts/{$post->slug}");
 
     $response->assertSuccessful();
 
@@ -327,14 +327,14 @@ it('prevents non-owner from deleting post', function (): void {
     $otherUser = User::factory()->create();
 
     $response = actingAs($otherUser)
-        ->deleteJson("/api/v1/posts/{$post->slug}");
+        ->deleteJson("/v1/posts/{$post->slug}");
 
     $response->assertForbidden();
 });
 
 it('validates post status enum', function (): void {
     $response = actingAs($this->user)
-        ->postJson('/api/v1/posts', [
+        ->postJson('/v1/posts', [
             'title' => [
                 'en' => 'Test',
                 'fr' => 'Test',
@@ -352,7 +352,7 @@ it('validates post status enum', function (): void {
 
 it('supports draft status', function (): void {
     $response = actingAs($this->user)
-        ->postJson('/api/v1/posts', [
+        ->postJson('/v1/posts', [
             'title' => [
                 'en' => 'Draft Post',
                 'fr' => 'Brouillon',
@@ -372,14 +372,14 @@ it('supports draft status', function (): void {
 });
 
 it('returns 404 for non-existent post', function (): void {
-    $response = getJson('/api/v1/posts/non-existent-slug');
+    $response = getJson('/v1/posts/non-existent-slug');
 
     $response->assertNotFound();
 });
 
 it('supports french language in post responses', function (): void {
     $response = actingAs($this->user)
-        ->postJson('/api/v1/posts', [
+        ->postJson('/v1/posts', [
             'title' => [
                 'en' => 'Test',
                 'fr' => 'Test',

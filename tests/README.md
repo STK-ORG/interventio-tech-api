@@ -178,7 +178,7 @@ php artisan test --coverage --min=80
 ### Test Simple
 ```php
 it('allows a user to register', function (): void {
-    $response = postJson('/api/v1/auth/register', [
+    $response = postJson('/v1/auth/register', [
         'name' => 'John Doe',
         'email' => 'john@example.com',
         'password' => 'Password123!',
@@ -198,7 +198,7 @@ it('allows owner to update their company', function (): void {
     $company = Company::factory()->create(['user_id' => $user->id]);
 
     $response = actingAs($user)
-        ->putJson("/api/v1/companies/{$company->id}", [
+        ->putJson("/v1/companies/{$company->id}", [
             'company_name' => 'Updated Name',
         ]);
 
@@ -213,7 +213,7 @@ it('filters companies by name', function (): void {
     Company::factory()->create(['company_name' => 'Tech Solutions']);
     Company::factory()->create(['company_name' => 'Digital Services']);
 
-    $response = getJson('/api/v1/companies?filter[company_name]=Tech');
+    $response = getJson('/v1/companies?filter[company_name]=Tech');
 
     $response->assertSuccessful();
     expect($response->json('data'))->toHaveCount(1);

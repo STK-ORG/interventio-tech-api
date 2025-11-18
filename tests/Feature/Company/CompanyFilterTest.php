@@ -28,7 +28,7 @@ beforeEach(function (): void {
 });
 
 it('filters companies by name', function (): void {
-    $response = getJson('/api/v1/companies?filter[company_name]=Tech');
+    $response = getJson('/v1/companies?filter[company_name]=Tech');
 
     $response->assertSuccessful();
 
@@ -40,7 +40,7 @@ it('filters companies by name', function (): void {
 });
 
 it('filters companies by verification status', function (): void {
-    $response = getJson('/api/v1/companies?filter[is_verified]=1');
+    $response = getJson('/v1/companies?filter[is_verified]=1');
 
     $response->assertSuccessful();
 
@@ -50,7 +50,7 @@ it('filters companies by verification status', function (): void {
 });
 
 it('filters companies by non-verified status', function (): void {
-    $response = getJson('/api/v1/companies?filter[is_verified]=0');
+    $response = getJson('/v1/companies?filter[is_verified]=0');
 
     $response->assertSuccessful();
 
@@ -60,7 +60,7 @@ it('filters companies by non-verified status', function (): void {
 });
 
 it('combines multiple filters', function (): void {
-    $response = getJson('/api/v1/companies?filter[company_name]=Tech&filter[is_verified]=1');
+    $response = getJson('/v1/companies?filter[company_name]=Tech&filter[is_verified]=1');
 
     $response->assertSuccessful();
 
@@ -73,7 +73,7 @@ it('combines multiple filters', function (): void {
 });
 
 it('sorts companies by name ascending', function (): void {
-    $response = getJson('/api/v1/companies?sort=company_name');
+    $response = getJson('/v1/companies?sort=company_name');
 
     $response->assertSuccessful();
 
@@ -84,7 +84,7 @@ it('sorts companies by name ascending', function (): void {
 });
 
 it('sorts companies by creation date descending', function (): void {
-    $response = getJson('/api/v1/companies?sort=-created_at');
+    $response = getJson('/v1/companies?sort=-created_at');
 
     $response->assertSuccessful();
 
@@ -99,7 +99,7 @@ it('sorts companies by creation date descending', function (): void {
 });
 
 it('sorts companies by verification date', function (): void {
-    $response = getJson('/api/v1/companies?sort=-verified_at');
+    $response = getJson('/v1/companies?sort=-verified_at');
 
     $response->assertSuccessful();
     expect($response->json('data'))->toBeArray();
@@ -108,7 +108,7 @@ it('sorts companies by verification date', function (): void {
 it('paginates company results', function (): void {
     Company::factory()->count(20)->create();
 
-    $response = getJson('/api/v1/companies?per_page=5');
+    $response = getJson('/v1/companies?per_page=5');
 
     $response->assertSuccessful()
         ->assertJsonStructure([
@@ -124,14 +124,14 @@ it('paginates company results', function (): void {
 it('navigates to next page', function (): void {
     Company::factory()->count(20)->create();
 
-    $response = getJson('/api/v1/companies?page=2&per_page=5');
+    $response = getJson('/v1/companies?page=2&per_page=5');
 
     $response->assertSuccessful();
     expect($response->json('meta.current_page'))->toBe(2);
 });
 
 it('includes user in company list when requested', function (): void {
-    $response = getJson('/api/v1/companies?include=user');
+    $response = getJson('/v1/companies?include=user');
 
     $response->assertSuccessful()
         ->assertJsonStructure([
@@ -147,7 +147,7 @@ it('combines filtering, sorting, and pagination', function (): void {
     Company::factory()->count(10)->verified()->create(['company_name' => 'Tech Company']);
     Company::factory()->count(10)->unverified()->create();
 
-    $response = getJson('/api/v1/companies?filter[is_verified]=1&sort=-created_at&per_page=5&page=1');
+    $response = getJson('/v1/companies?filter[is_verified]=1&sort=-created_at&per_page=5&page=1');
 
     $response->assertSuccessful();
 
@@ -157,21 +157,21 @@ it('combines filtering, sorting, and pagination', function (): void {
 });
 
 it('returns empty array when no companies match filters', function (): void {
-    $response = getJson('/api/v1/companies?filter[company_name]=NonExistentCompany');
+    $response = getJson('/v1/companies?filter[company_name]=NonExistentCompany');
 
     $response->assertSuccessful();
     expect($response->json('data'))->toBeArray()->toHaveCount(0);
 });
 
 it('handles invalid filter values gracefully', function (): void {
-    $response = getJson('/api/v1/companies?filter[is_verified]=invalid');
+    $response = getJson('/v1/companies?filter[is_verified]=invalid');
 
     // Devrait soit ignorer le filtre invalide, soit retourner une erreur 400
     expect($response->status())->toBeIn([200, 400]);
 });
 
 it('applies default sort when none specified', function (): void {
-    $response = getJson('/api/v1/companies');
+    $response = getJson('/v1/companies');
 
     $response->assertSuccessful();
 

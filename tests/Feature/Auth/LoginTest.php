@@ -7,7 +7,7 @@ use App\Models\User;
 use function Pest\Laravel\postJson;
 
 beforeEach(function (): void {
-    $this->endpoint = '/api/v1/auth/login';
+    $this->endpoint = '/v1/auth/login';
     $this->user = User::factory()->create([
         'email'    => 'test@example.com',
         'password' => bcrypt('Password123!'),
@@ -164,7 +164,7 @@ it('logs out user from current device', function (): void {
     $token = $loginResponse->json('access_token');
 
     // Ensuite se déconnecter
-    $response = postJson('/api/v1/auth/logout', [], [
+    $response = postJson('/v1/auth/logout', [], [
         'Authorization' => "Bearer {$token}",
     ]);
 
@@ -193,7 +193,7 @@ it('logs out user from all devices', function (): void {
     $token = $login1->json('access_token');
 
     // Se déconnecter de tous les appareils
-    $response = postJson('/api/v1/auth/logout-all', [], [
+    $response = postJson('/v1/auth/logout-all', [], [
         'Authorization' => "Bearer {$token}",
     ]);
 

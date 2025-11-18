@@ -16,7 +16,7 @@ it('allows guests to view published posts', function (): void {
     Post::factory()->count(3)->published()->create();
     Post::factory()->count(2)->draft()->create();
 
-    $response = getJson('/api/v1/posts');
+    $response = getJson('/v1/posts');
 
     $response->assertSuccessful();
     expect($response->json('data'))->toHaveCount(3);
@@ -37,7 +37,7 @@ it('allows guests to search published posts', function (): void {
         ],
     ]);
 
-    $response = getJson('/api/v1/posts?filter[search]=Laravel');
+    $response = getJson('/v1/posts?filter[search]=Laravel');
 
     $response->assertSuccessful();
     expect($response->json('data'))->toHaveCount(1);
@@ -46,7 +46,7 @@ it('allows guests to search published posts', function (): void {
 it('allows guests to view a specific published post', function (): void {
     $post = Post::factory()->published()->create();
 
-    $response = getJson("/api/v1/posts/{$post->slug}");
+    $response = getJson("/v1/posts/{$post->slug}");
 
     $response->assertSuccessful();
     expect($response->json('id'))->toBe($post->id);
@@ -55,7 +55,7 @@ it('allows guests to view a specific published post', function (): void {
 it('prevents guests from viewing draft posts', function (): void {
     $post = Post::factory()->draft()->create();
 
-    $response = getJson("/api/v1/posts/{$post->slug}");
+    $response = getJson("/v1/posts/{$post->slug}");
 
     $response->assertNotFound();
 });
@@ -68,7 +68,7 @@ it('allows authenticated users to view all published posts plus their own drafts
     Post::factory()->draft()->create(['user_id' => $this->user->id]);
     Post::factory()->draft()->create(['user_id' => $otherUser->id]);
 
-    $response = actingAs($this->user)->getJson('/api/v1/posts');
+    $response = actingAs($this->user)->getJson('/v1/posts');
 
     $response->assertSuccessful();
     expect($response->json('data'))->toHaveCount(5);
@@ -77,7 +77,7 @@ it('allows authenticated users to view all published posts plus their own drafts
 it('allows users to view their own draft posts', function (): void {
     $post = Post::factory()->draft()->create(['user_id' => $this->user->id]);
 
-    $response = actingAs($this->user)->getJson("/api/v1/posts/{$post->slug}");
+    $response = actingAs($this->user)->getJson("/v1/posts/{$post->slug}");
 
     $response->assertSuccessful();
     expect($response->json('id'))->toBe($post->id);
@@ -87,7 +87,7 @@ it('prevents users from viewing other users draft posts', function (): void {
     $otherUser = User::factory()->create();
     $post = Post::factory()->draft()->create(['user_id' => $otherUser->id]);
 
-    $response = actingAs($this->user)->getJson("/api/v1/posts/{$post->slug}");
+    $response = actingAs($this->user)->getJson("/v1/posts/{$post->slug}");
 
     $response->assertNotFound();
 });
@@ -98,7 +98,7 @@ it('increments view count for public posts', function (): void {
         'created_at'  => now()->subSecond(),
     ]);
 
-    getJson("/api/v1/posts/{$post->slug}");
+    getJson("/v1/posts/{$post->slug}");
 
     expect($post->fresh()->views_count)->toBe(1);
 });
@@ -109,7 +109,7 @@ it('filters by user_id in public feed', function (): void {
     Post::factory()->published()->count(2)->create(['user_id' => $author->id]);
     Post::factory()->published()->count(3)->create();
 
-    $response = getJson("/api/v1/posts?filter[user_id]={$author->id}");
+    $response = getJson("/v1/posts?filter[user_id]={$author->id}");
 
     $response->assertSuccessful();
     expect($response->json('data'))->toHaveCount(2);
@@ -128,7 +128,7 @@ it('sorts posts by published date in public feed', function (): void {
         'published_at' => now()->subDays(2),
     ]);
 
-    $response = getJson('/api/v1/posts?sort=-published_at');
+    $response = getJson('/v1/posts?sort=-published_at');
 
     $response->assertSuccessful();
     $data = $response->json('data');
@@ -143,7 +143,7 @@ it('sorts posts by views count in public feed', function (): void {
     $leastViewed = Post::factory()->published()->create(['views_count' => 10]);
     $mediumViewed = Post::factory()->published()->create(['views_count' => 50]);
 
-    $response = getJson('/api/v1/posts?sort=-views_count');
+    $response = getJson('/v1/posts?sort=-views_count');
 
     $response->assertSuccessful();
     $data = $response->json('data');
@@ -157,7 +157,7 @@ it('includes author relationship in public feed', function (): void {
     $author = User::factory()->create(['name' => 'John Doe']);
     Post::factory()->published()->create(['user_id' => $author->id]);
 
-    $response = getJson('/api/v1/posts?include=user');
+    $response = getJson('/v1/posts?include=user');
 
     $response->assertSuccessful();
     $data = $response->json('data.0');
@@ -169,7 +169,7 @@ it('includes author relationship in public feed', function (): void {
 it('paginates public feed', function (): void {
     Post::factory()->published()->count(25)->create();
 
-    $response = getJson('/api/v1/posts?per_page=10');
+    $response = getJson('/v1/posts?per_page=10');
 
     $response->assertSuccessful();
     expect($response->json('data'))->toHaveCount(10);

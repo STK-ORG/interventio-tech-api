@@ -15,7 +15,7 @@ beforeEach(function (): void {
 
 it('refreshes an access token with valid refresh token', function (): void {
     // D'abord se connecter pour obtenir un refresh token
-    $loginResponse = postJson('/api/v1/auth/login', [
+    $loginResponse = postJson('/v1/auth/login', [
         'email'    => 'test@example.com',
         'password' => 'Password123!',
     ]);
@@ -23,7 +23,7 @@ it('refreshes an access token with valid refresh token', function (): void {
     $refreshToken = $loginResponse->json('refresh_token');
 
     // Rafraîchir le token
-    $response = postJson('/api/v1/auth/refresh', [
+    $response = postJson('/v1/auth/refresh', [
         'refresh_token' => $refreshToken,
     ]);
 
@@ -46,7 +46,7 @@ it('refreshes an access token with valid refresh token', function (): void {
 });
 
 it('rejects invalid refresh token', function (): void {
-    $response = postJson('/api/v1/auth/refresh', [
+    $response = postJson('/v1/auth/refresh', [
         'refresh_token' => 'invalid-token-here',
     ]);
 
@@ -54,7 +54,7 @@ it('rejects invalid refresh token', function (): void {
 });
 
 it('requires refresh token field', function (): void {
-    $response = postJson('/api/v1/auth/refresh', []);
+    $response = postJson('/v1/auth/refresh', []);
 
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['refresh_token']);
@@ -68,7 +68,7 @@ it('rejects expired refresh token', function (): void {
         now()->subDay() // Expiré hier
     )->plainTextToken;
 
-    $response = postJson('/api/v1/auth/refresh', [
+    $response = postJson('/v1/auth/refresh', [
         'refresh_token' => $token,
     ]);
 
@@ -77,7 +77,7 @@ it('rejects expired refresh token', function (): void {
 
 it('revokes old refresh token after refresh', function (): void {
     // Se connecter
-    $loginResponse = postJson('/api/v1/auth/login', [
+    $loginResponse = postJson('/v1/auth/login', [
         'email'    => 'test@example.com',
         'password' => 'Password123!',
     ]);
@@ -86,14 +86,14 @@ it('revokes old refresh token after refresh', function (): void {
     $tokensBeforeRefresh = $this->user->fresh()->tokens()->count();
 
     // Rafraîchir
-    $refreshResponse = postJson('/api/v1/auth/refresh', [
+    $refreshResponse = postJson('/v1/auth/refresh', [
         'refresh_token' => $oldRefreshToken,
     ]);
 
     $refreshResponse->assertSuccessful();
 
     // Tenter de réutiliser l'ancien refresh token
-    $retryResponse = postJson('/api/v1/auth/refresh', [
+    $retryResponse = postJson('/v1/auth/refresh', [
         'refresh_token' => $oldRefreshToken,
     ]);
 
@@ -101,14 +101,14 @@ it('revokes old refresh token after refresh', function (): void {
 });
 
 it('supports device name in refresh', function (): void {
-    $loginResponse = postJson('/api/v1/auth/login', [
+    $loginResponse = postJson('/v1/auth/login', [
         'email'    => 'test@example.com',
         'password' => 'Password123!',
     ]);
 
     $refreshToken = $loginResponse->json('refresh_token');
 
-    $response = postJson('/api/v1/auth/refresh', [
+    $response = postJson('/v1/auth/refresh', [
         'refresh_token' => $refreshToken,
         'device_name'   => 'New Device',
     ]);
@@ -117,7 +117,7 @@ it('supports device name in refresh', function (): void {
 });
 
 it('rejects access token used as refresh token', function (): void {
-    $loginResponse = postJson('/api/v1/auth/login', [
+    $loginResponse = postJson('/v1/auth/login', [
         'email'    => 'test@example.com',
         'password' => 'Password123!',
     ]);
@@ -125,7 +125,7 @@ it('rejects access token used as refresh token', function (): void {
     $accessToken = $loginResponse->json('access_token');
 
     // Tenter d'utiliser l'access token comme refresh token
-    $response = postJson('/api/v1/auth/refresh', [
+    $response = postJson('/v1/auth/refresh', [
         'refresh_token' => $accessToken,
     ]);
 
@@ -133,14 +133,14 @@ it('rejects access token used as refresh token', function (): void {
 });
 
 it('supports french language in responses', function (): void {
-    $loginResponse = postJson('/api/v1/auth/login', [
+    $loginResponse = postJson('/v1/auth/login', [
         'email'    => 'test@example.com',
         'password' => 'Password123!',
     ]);
 
     $refreshToken = $loginResponse->json('refresh_token');
 
-    $response = postJson('/api/v1/auth/refresh', [
+    $response = postJson('/v1/auth/refresh', [
         'refresh_token' => $refreshToken,
     ], ['Accept-Language' => 'fr']);
 

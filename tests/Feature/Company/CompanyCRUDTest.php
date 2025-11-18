@@ -21,7 +21,7 @@ beforeEach(function (): void {
 it('lists all companies', function (): void {
     Company::factory()->count(5)->create();
 
-    $response = getJson('/api/v1/companies');
+    $response = getJson('/v1/companies');
 
     $response->assertSuccessful()
         ->assertJsonStructure([
@@ -41,7 +41,7 @@ it('lists all companies', function (): void {
 it('shows a specific company', function (): void {
     $company = Company::factory()->create();
 
-    $response = getJson("/api/v1/companies/{$company->id}");
+    $response = getJson("/v1/companies/{$company->id}");
 
     $response->assertSuccessful()
         ->assertJson([
@@ -54,7 +54,7 @@ it('shows a specific company', function (): void {
 it('supports including user in company details', function (): void {
     $company = Company::factory()->create();
 
-    $response = getJson("/api/v1/companies/{$company->id}?include=user");
+    $response = getJson("/v1/companies/{$company->id}?include=user");
 
     $response->assertSuccessful()
         ->assertJsonStructure([
@@ -68,7 +68,7 @@ it('supports including user in company details', function (): void {
 
 it('allows professional users to create a company', function (): void {
     $response = actingAs($this->professionalUser)
-        ->postJson('/api/v1/companies', [
+        ->postJson('/v1/companies', [
             'company_name' => 'New Tech Company',
             'cfe_number'   => 'CFE-2025-NEW-001',
             'address'      => 'Lomé, Togo',
@@ -97,7 +97,7 @@ it('allows professional users to create a company', function (): void {
 
 it('prevents private users from creating companies', function (): void {
     $response = actingAs($this->privateUser)
-        ->postJson('/api/v1/companies', [
+        ->postJson('/v1/companies', [
             'company_name' => 'New Company',
             'cfe_number'   => 'CFE-2025-001',
         ]);
@@ -106,7 +106,7 @@ it('prevents private users from creating companies', function (): void {
 });
 
 it('requires authentication to create company', function (): void {
-    $response = postJson('/api/v1/companies', [
+    $response = postJson('/v1/companies', [
         'company_name' => 'New Company',
         'cfe_number'   => 'CFE-2025-001',
     ]);
@@ -116,7 +116,7 @@ it('requires authentication to create company', function (): void {
 
 it('validates required fields when creating company', function (): void {
     $response = actingAs($this->professionalUser)
-        ->postJson('/api/v1/companies', []);
+        ->postJson('/v1/companies', []);
 
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['company_name', 'cfe_number']);
@@ -126,7 +126,7 @@ it('validates unique cfe_number', function (): void {
     Company::factory()->create(['cfe_number' => 'CFE-EXISTING']);
 
     $response = actingAs($this->professionalUser)
-        ->postJson('/api/v1/companies', [
+        ->postJson('/v1/companies', [
             'company_name' => 'New Company',
             'cfe_number'   => 'CFE-EXISTING',
         ]);
@@ -139,7 +139,7 @@ it('uploads logo when creating company', function (): void {
     $logo = UploadedFile::fake()->image('logo.png', 200, 200);
 
     $response = actingAs($this->professionalUser)
-        ->postJson('/api/v1/companies', [
+        ->postJson('/v1/companies', [
             'company_name' => 'New Company',
             'cfe_number'   => 'CFE-2025-001',
             'logo'         => $logo,
@@ -156,7 +156,7 @@ it('uploads multiple documents when creating company', function (): void {
     $doc2 = UploadedFile::fake()->create('doc2.pdf', 150);
 
     $response = actingAs($this->professionalUser)
-        ->postJson('/api/v1/companies', [
+        ->postJson('/v1/companies', [
             'company_name' => 'New Company',
             'cfe_number'   => 'CFE-2025-001',
             'documents'    => [$doc1, $doc2],
@@ -172,7 +172,7 @@ it('allows owner to update their company', function (): void {
     $company = Company::factory()->create(['user_id' => $this->professionalUser->id]);
 
     $response = actingAs($this->professionalUser)
-        ->putJson("/api/v1/companies/{$company->id}", [
+        ->putJson("/v1/companies/{$company->id}", [
             'company_name' => 'Updated Company Name',
             'address'      => 'New Address',
         ]);
@@ -194,7 +194,7 @@ it('prevents non-owner from updating company', function (): void {
     $otherUser = User::factory()->professional()->create();
 
     $response = actingAs($otherUser)
-        ->putJson("/api/v1/companies/{$company->id}", [
+        ->putJson("/v1/companies/{$company->id}", [
             'company_name' => 'Hacked Name',
         ]);
 
@@ -213,7 +213,7 @@ it('validates cfe_number uniqueness on update', function (): void {
     ]);
 
     $response = actingAs($this->professionalUser)
-        ->putJson("/api/v1/companies/{$company1->id}", [
+        ->putJson("/v1/companies/{$company1->id}", [
             'cfe_number' => 'CFE-002', // Essayer de dupliquer
         ]);
 
@@ -225,7 +225,7 @@ it('allows owner to delete their company', function (): void {
     $company = Company::factory()->create(['user_id' => $this->professionalUser->id]);
 
     $response = actingAs($this->professionalUser)
-        ->deleteJson("/api/v1/companies/{$company->id}");
+        ->deleteJson("/v1/companies/{$company->id}");
 
     $response->assertSuccessful();
 
@@ -238,20 +238,20 @@ it('prevents non-owner from deleting company', function (): void {
     $otherUser = User::factory()->professional()->create();
 
     $response = actingAs($otherUser)
-        ->deleteJson("/api/v1/companies/{$company->id}");
+        ->deleteJson("/v1/companies/{$company->id}");
 
     $response->assertForbidden();
 });
 
 it('returns 404 for non-existent company', function (): void {
-    $response = getJson('/api/v1/companies/99999');
+    $response = getJson('/v1/companies/99999');
 
     $response->assertNotFound();
 });
 
 it('supports french language in company responses', function (): void {
     $response = actingAs($this->professionalUser)
-        ->postJson('/api/v1/companies', [
+        ->postJson('/v1/companies', [
             'company_name' => 'Test Company',
             'cfe_number'   => 'CFE-2025-001',
         ], ['Accept-Language' => 'fr']);
@@ -262,7 +262,7 @@ it('supports french language in company responses', function (): void {
 
 it('supports multilingue descriptions', function (): void {
     $response = actingAs($this->professionalUser)
-        ->postJson('/api/v1/companies', [
+        ->postJson('/v1/companies', [
             'company_name' => 'Test Company',
             'cfe_number'   => 'CFE-2025-001',
             'description'  => [
