@@ -39,11 +39,30 @@ APP_URL=${APP_URL:-http://localhost}
 EOF
 
 # Gérer DATABASE_URL si elle est fournie (format Render)
-if [ ! -z "$DATABASE_URL" ]; then
+# Render peut fournir INTERNAL_DATABASE_URL ou DATABASE_URL
+if [ ! -z "$INTERNAL_DATABASE_URL" ]; then
+    echo "DB_CONNECTION=${DB_CONNECTION:-pgsql}" >> .env
+    echo "DATABASE_URL=${INTERNAL_DATABASE_URL}" >> .env
+    echo "DB_URL=${INTERNAL_DATABASE_URL}" >> .env
+elif [ ! -z "$DATABASE_URL" ]; then
     echo "DB_CONNECTION=${DB_CONNECTION:-pgsql}" >> .env
     echo "DATABASE_URL=${DATABASE_URL}" >> .env
     echo "DB_URL=${DATABASE_URL}" >> .env
+elif [ ! -z "$DB_HOST" ] && [ ! -z "$DB_DATABASE" ] && [ ! -z "$DB_USERNAME" ] && [ ! -z "$DB_PASSWORD" ]; then
+    # Construire DB_URL à partir des variables individuelles
+    DB_URL="postgresql://${DB_USERNAME}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT:-5432}/${DB_DATABASE}"
+    cat >> .env << EOF
+DB_CONNECTION=${DB_CONNECTION:-pgsql}
+DB_HOST=${DB_HOST}
+DB_PORT=${DB_PORT:-5432}
+DB_DATABASE=${DB_DATABASE}
+DB_USERNAME=${DB_USERNAME}
+DB_PASSWORD=${DB_PASSWORD}
+DATABASE_URL=${DB_URL}
+DB_URL=${DB_URL}
+EOF
 else
+    # Utiliser les variables individuelles (même si certaines sont vides)
     cat >> .env << EOF
 DB_CONNECTION=${DB_CONNECTION:-pgsql}
 DB_HOST=${DB_HOST:-}
