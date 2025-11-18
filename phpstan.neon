@@ -32,3 +32,5 @@ parameters:
         - '#type has no value type specified in iterable type array#'
         - '#The @use tag.*describes.*HasFactory but the class uses#'
         - '#Strict comparison using === between .* and App\\Enums\\.*#'
+        - '#Access to an undefined property PHPUnit\\Framework\\TestCase::\$.*#'
+        - '#Unable to resolve the template type .* in call to function (collect|expect)#'

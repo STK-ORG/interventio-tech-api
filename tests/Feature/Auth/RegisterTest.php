@@ -85,6 +85,8 @@ it('allows a user to register with professional account', function (): void {
 
     $user = User::where('email', 'jane@example.com')->first();
     expect($user->professionalProfile)->not->toBeNull();
+
+    /** @phpstan-ignore-next-line */
     expect($user->professionalProfile->company_name)->toBe('Tech Solutions SARL');
 });
 

@@ -43,7 +43,7 @@ final class CacheService
     /**
      * Récupère ou met en cache une valeur
      */
-    public static function remember(string $key, int $ttl, callable $callback): mixed
+    public static function remember(string $key, int $ttl, \Closure $callback): mixed
     {
         return Cache::remember($key, $ttl, $callback);
     }
@@ -54,6 +54,10 @@ final class CacheService
     public static function forgetPrefix(string $prefix): void
     {
         $files = glob(storage_path("framework/cache/data/*/{$prefix}.*"));
+
+        if ($files === false) {
+            return;
+        }
 
         foreach ($files as $file) {
             if (is_file($file)) {

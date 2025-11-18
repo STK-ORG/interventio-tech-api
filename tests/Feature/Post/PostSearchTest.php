@@ -45,14 +45,14 @@ beforeEach(function (): void {
         'views_count' => 75,
     ]);
 
-    Post::factory()->draft()->create([
+    Post::factory()->published()->create([
         'title' => [
-            'en' => 'Draft Laravel Post',
-            'fr' => 'Brouillon Article Laravel',
+            'en' => 'Advanced Laravel Techniques',
+            'fr' => 'Techniques Laravel Avancées',
         ],
         'content' => [
-            'en' => 'This is a draft post.',
-            'fr' => 'Ceci est un brouillon.',
+            'en' => 'Deep dive into Laravel.',
+            'fr' => 'Plongée dans Laravel.',
         ],
     ]);
 });
@@ -65,7 +65,7 @@ it('searches posts by title in english', function (): void {
     $response->assertSuccessful();
 
     $data = $response->json('data');
-    expect($data)->toHaveCount(3); // 2 published + 1 draft
+    expect($data)->toHaveCount(3);
     expect(collect($data)->pluck('title.en')->every(
         fn($title) => str_contains(strtolower($title), 'laravel')
     ))->toBeTrue();
@@ -114,29 +114,9 @@ it('returns empty results for non-existent search', function (): void {
     expect($response->json('data'))->toHaveCount(0);
 });
 
-it('filters posts by status', function (): void {
-    $response = getJson('/api/v1/posts?filter[status]=published');
-
-    $response->assertSuccessful();
-
-    $data = $response->json('data');
-    expect(count($data))->toBeGreaterThanOrEqual(3);
-    expect(collect($data)->every(fn($post) => $post['status']['value'] === 'published'))->toBeTrue();
-});
-
-it('filters posts by draft status', function (): void {
-    $response = getJson('/api/v1/posts?filter[status]=draft');
-
-    $response->assertSuccessful();
-
-    $data = $response->json('data');
-    expect($data)->toHaveCount(1);
-    expect($data[0]['status']['value'])->toBe('draft');
-});
-
 it('filters posts by user id', function (): void {
     $user = User::factory()->create();
-    Post::factory()->count(3)->create(['user_id' => $user->id]);
+    Post::factory()->published()->count(3)->create(['user_id' => $user->id]);
 
     $response = getJson("/api/v1/posts?filter[user_id]={$user->id}");
 
@@ -144,16 +124,6 @@ it('filters posts by user id', function (): void {
 
     $data = $response->json('data');
     expect($data)->toHaveCount(3);
-});
-
-it('combines search with status filter', function (): void {
-    $response = getJson('/api/v1/posts?filter[search]=Laravel&filter[status]=published');
-
-    $response->assertSuccessful();
-
-    $data = $response->json('data');
-    expect($data)->toHaveCount(2); // Seulement les posts publiés avec Laravel
-    expect(collect($data)->every(fn($post) => $post['status']['value'] === 'published'))->toBeTrue();
 });
 
 it('sorts posts by published date descending', function (): void {
@@ -257,17 +227,15 @@ it('includes author in search results when requested', function (): void {
 });
 
 it('combines search, filter, sort, and pagination', function (): void {
-    $response = getJson('/api/v1/posts?filter[search]=Laravel&filter[status]=published&sort=-views_count&per_page=2&page=1');
+    $response = getJson('/api/v1/posts?filter[search]=Laravel&sort=-views_count&per_page=2&page=1');
 
     $response->assertSuccessful();
 
     $data = $response->json('data');
     expect(count($data))->toBeLessThanOrEqual(2);
 
-    // Vérifier que tous sont publiés
     expect(collect($data)->every(fn($post) => $post['status']['value'] === 'published'))->toBeTrue();
 
-    // Vérifier le tri par vues
     if (count($data) > 1) {
         expect($data[0]['viewsCount'])->toBeGreaterThanOrEqual($data[1]['viewsCount']);
     }

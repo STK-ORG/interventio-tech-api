@@ -10,6 +10,7 @@ use App\Http\Requests\V1\Company\UpdateRequest;
 use App\Http\Resources\V1\CompanyResource;
 use App\Http\Traits\Cacheable;
 use App\Models\Company;
+use App\Services\CacheService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -90,15 +91,22 @@ final class CompanyController extends Controller
      */
     public function index(Request $request): AnonymousResourceCollection
     {
-        $companies = QueryBuilder::for(Company::class)
-            ->allowedIncludes(['user'])
-            ->allowedFilters([
-                AllowedFilter::partial('company_name'),
-                AllowedFilter::exact('is_verified'),
-            ])
-            ->allowedSorts(['company_name', 'created_at', 'verified_at'])
-            ->defaultSort('-created_at')
-            ->paginate($request->input('per_page', 15));
+        $companies = $this->cacheList(
+            $request,
+            CacheService::PREFIX_COMPANY,
+            function () use ($request) {
+                return QueryBuilder::for(Company::class)
+                    ->allowedIncludes(['user'])
+                    ->allowedFilters([
+                        AllowedFilter::partial('company_name'),
+                        AllowedFilter::exact('is_verified'),
+                    ])
+                    ->allowedSorts(['company_name', 'created_at', 'verified_at'])
+                    ->defaultSort('-created_at')
+                    ->paginate($request->input('per_page', 15));
+            },
+            CacheService::TTL_MEDIUM
+        );
 
         return CompanyResource::collection($companies);
     }
@@ -163,19 +171,19 @@ final class CompanyController extends Controller
             'description'  => $request->description,
         ]);
 
-        // Gérer le logo si fourni
         if ($request->hasFile('logo')) {
             $company->addMediaFromRequest('logo')
                 ->toMediaCollection('logo');
         }
 
-        // Gérer les documents si fournis
         if ($request->hasFile('documents')) {
             foreach ($request->file('documents') as $document) {
                 $company->addMedia($document)
                     ->toMediaCollection('documents');
             }
         }
+
+        $this->invalidateCache(CacheService::PREFIX_COMPANY);
 
         return response()->json([
             'data'    => new CompanyResource($company->fresh()->load('user')),
@@ -300,20 +308,20 @@ final class CompanyController extends Controller
             'description',
         ]));
 
-        // Gérer le logo si fourni
         if ($request->hasFile('logo')) {
             $company->clearMediaCollection('logo');
             $company->addMediaFromRequest('logo')
                 ->toMediaCollection('logo');
         }
 
-        // Gérer les documents si fournis
         if ($request->hasFile('documents')) {
             foreach ($request->file('documents') as $document) {
                 $company->addMedia($document)
                     ->toMediaCollection('documents');
             }
         }
+
+        $this->invalidateCache(CacheService::PREFIX_COMPANY);
 
         return response()->json([
             'data'    => new CompanyResource($company->fresh()->load('user')),
@@ -370,6 +378,8 @@ final class CompanyController extends Controller
         $this->authorize('delete', $company);
 
         $company->delete();
+
+        $this->invalidateCache(CacheService::PREFIX_COMPANY);
 
         return response()->json([
             'message' => __('companies.deleted'),

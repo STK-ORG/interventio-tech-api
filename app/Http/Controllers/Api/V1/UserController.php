@@ -8,15 +8,20 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\User\UpdateAvatarRequest;
 use App\Http\Requests\V1\User\UpdateProfileRequest;
 use App\Http\Resources\V1\UserResource;
+use App\Http\Traits\Cacheable;
 use App\Models\User;
+use App\Services\CacheService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use OpenApi\Annotations as OA;
 use Spatie\QueryBuilder\QueryBuilder;
 
 class UserController extends Controller
 {
+    use Cacheable;
+
     /**
      * @OA\Get(
      *     path="/v1/users/me",
@@ -54,9 +59,23 @@ class UserController extends Controller
      */
     public function current(Request $request): UserResource
     {
-        $user = QueryBuilder::for(User::where('id', $request->user()->id))
-            ->allowedIncludes(['professionalProfile', 'companies', 'posts'])
-            ->first();
+        $userId = $request->user()->id;
+        $includes = $request->input('include', '');
+        $locale = app()->getLocale();
+
+        $cacheKey = sprintf(
+            '%s.current.user_%d.includes_%s.locale_%s',
+            CacheService::PREFIX_USER,
+            $userId,
+            md5($includes),
+            $locale
+        );
+
+        $user = Cache::remember($cacheKey, CacheService::TTL_SHORT, function () use ($userId) {
+            return QueryBuilder::for(User::where('id', $userId))
+                ->allowedIncludes(['professionalProfile', 'companies', 'posts'])
+                ->first();
+        });
 
         return new UserResource($user);
     }
@@ -117,14 +136,14 @@ class UserController extends Controller
 
         $data = $request->only(['name', 'email', 'address']);
 
-        // Si un nouveau mot de passe est fourni, le hacher
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
         }
 
         $user->update($data);
 
-        // Recharger avec Query Builder pour inclure les relations demandées
+        $this->invalidateUserCache($user->id);
+
         $updatedUser = QueryBuilder::for(User::where('id', $user->id))
             ->allowedIncludes(['professionalProfile', 'companies', 'posts'])
             ->first();
@@ -193,14 +212,13 @@ class UserController extends Controller
     {
         $user = $request->user();
 
-        // Supprimer l'ancien avatar s'il existe
         $user->clearMediaCollection('avatar');
 
-        // Ajouter le nouvel avatar
         $media = $user->addMediaFromRequest('avatar')
             ->toMediaCollection('avatar');
 
-        // Recharger avec Query Builder pour inclure les relations demandées
+        $this->invalidateUserCache($user->id);
+
         $updatedUser = QueryBuilder::for(User::where('id', $user->id))
             ->allowedIncludes(['professionalProfile', 'companies', 'posts'])
             ->first();
@@ -254,10 +272,10 @@ class UserController extends Controller
     {
         $user = $request->user();
 
-        // Supprimer l'avatar
         $user->clearMediaCollection('avatar');
 
-        // Recharger avec Query Builder pour inclure les relations demandées
+        $this->invalidateUserCache($user->id);
+
         $updatedUser = QueryBuilder::for(User::where('id', $user->id))
             ->allowedIncludes(['professionalProfile', 'companies', 'posts'])
             ->first();
@@ -266,5 +284,14 @@ class UserController extends Controller
             'user'    => new UserResource($updatedUser),
             'message' => __('profile.avatar_deleted'),
         ]);
+    }
+
+    /**
+     * Invalidate cache for a specific user
+     * Note: With file driver, this flushes all cache. Use Redis tags in production for granular control.
+     */
+    private function invalidateUserCache(int $userId): void
+    {
+        Cache::flush();
     }
 }

@@ -17,7 +17,7 @@ trait Cacheable
         $params = [
             $request->query->all(),
             $request->header('Accept-Language', 'en'),
-            $request->user()?->id ?? 'guest',
+            $request->user()->id ?? 'guest',
         ];
 
         return CacheService::generateKey($prefix, ...$params);
@@ -26,7 +26,7 @@ trait Cacheable
     /**
      * Met en cache une réponse de liste paginée
      */
-    protected function cacheList(Request $request, string $prefix, callable $callback, int $ttl = CacheService::TTL_MEDIUM): mixed
+    protected function cacheList(Request $request, string $prefix, \Closure $callback, int $ttl = CacheService::TTL_MEDIUM): mixed
     {
         $cacheKey = $this->getCacheKey($request, $prefix . '.list');
 
@@ -36,7 +36,7 @@ trait Cacheable
     /**
      * Met en cache une ressource individuelle
      */
-    protected function cacheItem(string $identifier, string $prefix, callable $callback, int $ttl = CacheService::TTL_LONG): mixed
+    protected function cacheItem(string $identifier, string $prefix, \Closure $callback, int $ttl = CacheService::TTL_LONG): mixed
     {
         $cacheKey = CacheService::generateKey($prefix . '.item', $identifier);
 

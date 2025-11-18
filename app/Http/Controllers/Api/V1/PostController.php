@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\PostStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Post\StoreRequest;
 use App\Http\Requests\V1\Post\UpdateRequest;
@@ -25,8 +26,8 @@ final class PostController extends Controller
     /**
      * @OA\Get(
      *     path="/v1/posts",
-     *     summary="List all posts",
-     *     description="Get a paginated list of posts with search, filtering, sorting, and includes. Use the `Accept-Language` header to get responses in French (fr) or English (en).",
+     *     summary="Public feed - List all posts",
+     *     description="Get a paginated public feed of posts. Guests see only published posts, authenticated users can see their own drafts too. Use the `Accept-Language` header to get responses in French (fr) or English (en).",
      *     tags={"Posts"},
      *     @OA\Parameter(
      *         name="Accept-Language",
@@ -90,12 +91,22 @@ final class PostController extends Controller
      */
     public function index(Request $request): AnonymousResourceCollection
     {
-        // Cache la liste des posts pour 5 minutes
         $posts = $this->cacheList(
             $request,
             CacheService::PREFIX_POST,
             function () use ($request) {
-                return QueryBuilder::for(Post::class)
+                $query = QueryBuilder::for(Post::class);
+
+                if (! $request->user()) {
+                    $query->where('status', PostStatus::PUBLISHED);
+                } else {
+                    $query->where(function ($q) use ($request): void {
+                        $q->where('status', PostStatus::PUBLISHED)
+                            ->orWhere('user_id', $request->user()->id);
+                    });
+                }
+
+                return $query
                     ->allowedIncludes(['user'])
                     ->allowedFilters([
                         AllowedFilter::callback('search', function ($query, $value) {
@@ -104,24 +115,21 @@ final class PostController extends Controller
 
                             $query->where(function ($q) use ($value, $locale, $driver): void {
                                 if ($driver === 'sqlite') {
-                                    // SQLite utilise json_extract (minuscule, sans UNQUOTE)
                                     $q->whereRaw("json_extract(title, '$.{$locale}') LIKE ?", ["%{$value}%"])
                                         ->orWhereRaw("json_extract(content, '$.{$locale}') LIKE ?", ["%{$value}%"]);
                                 } else {
-                                    // MySQL/PostgreSQL
                                     $q->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(title, '$.{$locale}')) LIKE ?", ["%{$value}%"])
                                         ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(content, '$.{$locale}')) LIKE ?", ["%{$value}%"]);
                                 }
                             });
                         }),
-                        AllowedFilter::exact('status'),
                         AllowedFilter::exact('user_id'),
                     ])
                     ->allowedSorts(['published_at', 'created_at', 'views_count'])
                     ->defaultSort('-published_at')
                     ->paginate($request->input('per_page', 15));
             },
-            CacheService::TTL_SHORT // 5 minutes car les posts changent souvent
+            CacheService::TTL_SHORT
         );
 
         return PostResource::collection($posts);
@@ -180,13 +188,11 @@ final class PostController extends Controller
             'published_at' => $request->published_at,
         ]);
 
-        // Gérer l'image mise en avant si fournie
         if ($request->hasFile('featured_image')) {
             $post->addMediaFromRequest('featured_image')
                 ->toMediaCollection('featured_image');
         }
 
-        // Gérer la galerie d'images si fournie
         if ($request->hasFile('gallery')) {
             foreach ($request->file('gallery') as $image) {
                 $post->addMedia($image)
@@ -194,7 +200,6 @@ final class PostController extends Controller
             }
         }
 
-        // Invalider le cache des posts
         $this->invalidateCache(CacheService::PREFIX_POST);
 
         return response()->json([
@@ -206,8 +211,8 @@ final class PostController extends Controller
     /**
      * @OA\Get(
      *     path="/v1/posts/{slug}",
-     *     summary="Get a specific post",
-     *     description="Get details of a specific post by slug. Use the `Accept-Language` header to get responses in French (fr) or English (en).",
+     *     summary="Public - Get a specific post",
+     *     description="Get details of a specific post by slug. Public endpoint - guests can view published posts, authenticated users can also view their own drafts. Use the `Accept-Language` header to get responses in French (fr) or English (en).",
      *     tags={"Posts"},
      *     @OA\Parameter(
      *         name="slug",
@@ -244,13 +249,23 @@ final class PostController extends Controller
      *     )
      * )
      */
-    public function show(string $slug): PostResource
+    public function show(Request $request, string $slug): PostResource
     {
-        $post = QueryBuilder::for(Post::where('slug', $slug))
-            ->allowedIncludes(['user'])
-            ->firstOrFail();
+        $query = QueryBuilder::for(Post::where('slug', $slug));
 
-        // Incrémenter le compteur de vues
+        if (! $request->user()) {
+            $query->where('status', PostStatus::PUBLISHED);
+        }
+
+        $post = $query->allowedIncludes(['user'])->firstOrFail();
+
+        $currentUser = $request->user();
+        if (! $currentUser || $post->user_id !== $currentUser->id) {
+            if ($post->status !== PostStatus::PUBLISHED) {
+                abort(404);
+            }
+        }
+
         $post->incrementViews();
 
         return new PostResource($post);
@@ -322,14 +337,12 @@ final class PostController extends Controller
             'published_at',
         ]));
 
-        // Gérer l'image mise en avant si fournie
         if ($request->hasFile('featured_image')) {
             $post->clearMediaCollection('featured_image');
             $post->addMediaFromRequest('featured_image')
                 ->toMediaCollection('featured_image');
         }
 
-        // Gérer la galerie d'images si fournie
         if ($request->hasFile('gallery')) {
             foreach ($request->file('gallery') as $image) {
                 $post->addMedia($image)
@@ -337,7 +350,6 @@ final class PostController extends Controller
             }
         }
 
-        // Invalider le cache des posts
         $this->invalidateCache(CacheService::PREFIX_POST);
 
         return response()->json([
@@ -396,7 +408,6 @@ final class PostController extends Controller
 
         $post->delete();
 
-        // Invalider le cache des posts
         $this->invalidateCache(CacheService::PREFIX_POST);
 
         return response()->json([
