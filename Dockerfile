@@ -60,7 +60,7 @@ ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS=0
 ENV PHP_OPCACHE_MEMORY_CONSUMPTION=256
 ENV PHP_OPCACHE_MAX_ACCELERATED_FILES=20000
 
-# Installation des dépendances nécessaires en production
+# Installation des dépendances runtime uniquement (pas les -dev)
 RUN apk add --no-cache \
     libpng \
     libjpeg-turbo \
@@ -73,19 +73,9 @@ RUN apk add --no-cache \
     supervisor \
     bash
 
-# Installation des extensions PHP (mêmes que builder)
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
-    && docker-php-ext-install -j$(nproc) \
-    pdo \
-    pdo_mysql \
-    pdo_pgsql \
-    mbstring \
-    exif \
-    pcntl \
-    bcmath \
-    gd \
-    zip \
-    opcache
+# Copier les extensions PHP depuis le builder (au lieu de recompiler)
+COPY --from=builder /usr/local/lib/php/extensions/no-debug-non-zts-20240924/ /usr/local/lib/php/extensions/no-debug-non-zts-20240924/
+COPY --from=builder /usr/local/etc/php/conf.d/docker-php-ext-*.ini /usr/local/etc/php/conf.d/
 
 # Copier la configuration PHP
 COPY docker/php/php.ini /usr/local/etc/php/conf.d/app.ini
