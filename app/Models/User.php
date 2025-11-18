@@ -14,13 +14,16 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
-class User extends Authenticatable
+class User extends Authenticatable implements HasMedia
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens;
 
     use HasFactory;
+    use InteractsWithMedia;
     use Notifiable;
 
     /**
@@ -58,6 +61,25 @@ class User extends Authenticatable
             'password'          => 'hashed',
             'account_type'      => AccountType::class,
         ];
+    }
+
+    /**
+     * Configure media collections
+     */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('avatar')
+            ->singleFile()
+            ->useFallbackUrl('/images/default-avatar.png')
+            ->registerMediaConversions(function () {
+                $this->addMediaConversion('thumb')
+                    ->width(150)
+                    ->height(150);
+
+                $this->addMediaConversion('medium')
+                    ->width(300)
+                    ->height(300);
+            });
     }
 
     /**

@@ -67,9 +67,17 @@ final class UserResource extends JsonResource
                 'value' => $accountType->value,
                 'label' => $accountType->label(),
             ],
-            'address'         => $this->address,
-            'isProfessional'  => $this->isProfessional(),
-            'isPrivate'       => $this->isPrivate(),
+            'address'        => $this->address,
+            'isProfessional' => $this->isProfessional(),
+            'isPrivate'      => $this->isPrivate(),
+            'avatar'         => $this->when(
+                $this->hasMedia('avatar'),
+                fn() => [
+                    'url'    => $this->getFirstMediaUrl('avatar'),
+                    'thumb'  => $this->getFirstMediaUrl('avatar', 'thumb'),
+                    'medium' => $this->getFirstMediaUrl('avatar', 'medium'),
+                ]
+            ),
             'emailVerifiedAt' => $this->when(
                 $this->email_verified_at !== null,
                 fn() => new DateTimeResource($this->email_verified_at)

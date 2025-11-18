@@ -24,9 +24,6 @@ enum AccountType: string
      */
     public function label(): string
     {
-        return match ($this) {
-            self::PRIVATE      => 'Compte Privé',
-            self::PROFESSIONAL => 'Compte Professionnel',
-        };
+        return __("enums.account_type.{$this->value}");
     }
 }

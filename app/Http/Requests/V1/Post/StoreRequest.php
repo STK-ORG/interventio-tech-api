@@ -71,39 +71,4 @@ final class StoreRequest extends FormRequest
             'gallery.*'      => ['image', 'max:5120'],
         ];
     }
-
-    /**
-     * Get custom attributes for validator errors.
-     *
-     * @return array<string, string>
-     */
-    public function attributes(): array
-    {
-        return [
-            'title.en'       => 'titre en anglais',
-            'title.fr'       => 'titre en français',
-            'content.en'     => 'contenu en anglais',
-            'content.fr'     => 'contenu en français',
-            'status'         => 'statut',
-            'published_at'   => 'date de publication',
-            'featured_image' => 'image mise en avant',
-            'gallery'        => 'galerie',
-        ];
-    }
-
-    /**
-     * Get custom messages for validator errors.
-     *
-     * @return array<string, string>
-     */
-    public function messages(): array
-    {
-        return [
-            'title.required'     => 'Le titre est obligatoire.',
-            'title.*.required'   => 'Le :attribute est obligatoire.',
-            'content.*.required' => 'Le :attribute est obligatoire.',
-            'featured_image.max' => 'L\'image ne doit pas dépasser 5 Mo.',
-            'gallery.*.max'      => 'Chaque image de la galerie ne doit pas dépasser 5 Mo.',
-        ];
-    }
 }

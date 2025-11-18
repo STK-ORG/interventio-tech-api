@@ -47,9 +47,13 @@ return [
     | considered expired. This will override any values set in the token's
     | "expires_at" attribute, but first-party sessions are not affected.
     |
+    | Access Token: 30 minutes (for security)
+    | Refresh Token: 30 days (for convenience)
+    |
     */
 
-    'expiration' => null,
+    'expiration'         => env('SANCTUM_EXPIRATION', 30), // 30 minutes par défaut
+    'refresh_expiration' => env('SANCTUM_REFRESH_EXPIRATION', 43200), // 30 jours
 
     /*
     |--------------------------------------------------------------------------

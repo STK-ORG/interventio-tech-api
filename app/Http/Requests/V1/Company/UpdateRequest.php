@@ -70,38 +70,4 @@ final class UpdateRequest extends FormRequest
             'documents.*'    => ['file', 'mimes:pdf,doc,docx', 'max:10240'],
         ];
     }
-
-    /**
-     * Get custom attributes for validator errors.
-     *
-     * @return array<string, string>
-     */
-    public function attributes(): array
-    {
-        return [
-            'company_name'   => 'nom de l\'entreprise',
-            'cfe_number'     => 'numéro CFE',
-            'address'        => 'adresse',
-            'description.en' => 'description en anglais',
-            'description.fr' => 'description en français',
-            'logo'           => 'logo',
-            'documents'      => 'documents',
-        ];
-    }
-
-    /**
-     * Get custom messages for validator errors.
-     *
-     * @return array<string, string>
-     */
-    public function messages(): array
-    {
-        return [
-            'company_name.required' => 'Le nom de l\'entreprise est obligatoire.',
-            'cfe_number.required'   => 'Le numéro CFE est obligatoire.',
-            'cfe_number.unique'     => 'Ce numéro CFE est déjà utilisé.',
-            'logo.max'              => 'Le logo ne doit pas dépasser 2 Mo.',
-            'documents.*.max'       => 'Chaque document ne doit pas dépasser 10 Mo.',
-        ];
-    }
 }

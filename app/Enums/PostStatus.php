@@ -25,11 +25,7 @@ enum PostStatus: string
      */
     public function label(): string
     {
-        return match ($this) {
-            self::DRAFT     => 'Brouillon',
-            self::PUBLISHED => 'Publié',
-            self::ARCHIVED  => 'Archivé',
-        };
+        return __("enums.post_status.{$this->value}");
     }
 
     /**
@@ -37,10 +33,6 @@ enum PostStatus: string
      */
     public function color(): string
     {
-        return match ($this) {
-            self::DRAFT     => 'gray',
-            self::PUBLISHED => 'green',
-            self::ARCHIVED  => 'red',
-        };
+        return __("enums.post_status_colors.{$this->value}");
     }
 }
