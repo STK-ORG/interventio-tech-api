@@ -66,17 +66,18 @@ DATABASE_URL=${DB_URL}
 DB_URL=${DB_URL}
 EOF
 else
-    # Aucune configuration de base de données trouvée - erreur
-    echo "❌ ERROR: No database configuration found!"
+    # Aucune variable d'environnement trouvée - utiliser l'URL directe (fallback)
+    echo "⚠️  No database environment variables found, using direct URL"
     echo "   INTERNAL_DATABASE_URL: ${INTERNAL_DATABASE_URL:-not set}"
     echo "   DATABASE_URL: ${DATABASE_URL:-not set}"
     echo "   DB_HOST: ${DB_HOST:-not set}"
-    echo "   DB_DATABASE: ${DB_DATABASE:-not set}"
-    echo "   DB_USERNAME: ${DB_USERNAME:-not set}"
-    echo "   DB_PASSWORD: ${DB_PASSWORD:-not set}"
     echo ""
-    echo "⚠️  Please set INTERNAL_DATABASE_URL or DATABASE_URL in Render environment variables"
-    exit 1
+    echo "✅ Using hardcoded INTERNAL_DATABASE_URL as fallback"
+    # URL interne de la base de données Render
+    INTERNAL_DB_URL="postgresql://interventio_tech_user:LIgM1En6Bp1qS66i6lfXJVJqbKxv8sGf@dpg-d4e90ingi27c73ci2sog-a/interventio_tech"
+    echo "DB_CONNECTION=${DB_CONNECTION:-pgsql}" >> .env
+    echo "DATABASE_URL=${INTERNAL_DB_URL}" >> .env
+    echo "DB_URL=${INTERNAL_DB_URL}" >> .env
 fi
 
 cat >> .env << EOF
