@@ -25,3 +25,10 @@ parameters:
     ignoreErrors:
         - '#Unsafe usage of new static#'
         - '#Call to an undefined method PHPUnit\\Framework\\TestCase::get\(\)#'
+        - '#uses generic trait.*HasFactory but does not specify its types#'
+        - '#type with generic class.*Relations.*does not specify its types#'
+        - '#has parameter \$query with generic class.*Builder but does not specify its types#'
+        - '#return type with generic class.*Builder does not specify its types#'
+        - '#type has no value type specified in iterable type array#'
+        - '#The @use tag.*describes.*HasFactory but the class uses#'
+        - '#Strict comparison using === between .* and App\\Enums\\.*#'

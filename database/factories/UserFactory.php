@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Enums\AccountType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -31,6 +32,8 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password'          => static::$password ??= Hash::make('password'),
             'remember_token'    => Str::random(10),
+            'account_type'      => fake()->randomElement(AccountType::cases()),
+            'address'           => fake()->address(),
         ];
     }
 
@@ -41,6 +44,26 @@ class UserFactory extends Factory
     {
         return $this->state(fn(array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is a professional account.
+     */
+    public function professional(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'account_type' => AccountType::PROFESSIONAL,
+        ]);
+    }
+
+    /**
+     * Indicate that the user is a private account.
+     */
+    public function private(): static
+    {
+        return $this->state(fn(array $attributes) => [
+            'account_type' => AccountType::PRIVATE,
         ]);
     }
 }
