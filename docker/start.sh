@@ -36,12 +36,23 @@ APP_DEBUG=${APP_DEBUG:-false}
 APP_URL=${APP_URL:-http://localhost}
 
 # Database
+EOF
+
+# Gérer DATABASE_URL si elle est fournie (format Render)
+if [ ! -z "$DATABASE_URL" ]; then
+    echo "DATABASE_URL=${DATABASE_URL}" >> .env
+else
+    cat >> .env << EOF
 DB_CONNECTION=${DB_CONNECTION:-pgsql}
 DB_HOST=${DB_HOST:-}
 DB_PORT=${DB_PORT:-5432}
 DB_DATABASE=${DB_DATABASE:-}
 DB_USERNAME=${DB_USERNAME:-}
 DB_PASSWORD=${DB_PASSWORD:-}
+EOF
+fi
+
+cat >> .env << EOF
 
 # Cache & Sessions
 CACHE_STORE=${CACHE_STORE:-file}
