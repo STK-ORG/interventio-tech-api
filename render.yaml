@@ -1,0 +1,125 @@
+# Render Blueprint pour Laravel API
+# Documentation: https://render.com/docs/blueprint-spec
+
+services:
+  # Service Web principal
+  - type: web
+    name: interventio-api
+    runtime: docker
+    plan: starter # Peut être: free, starter, standard, pro, pro plus, pro max, pro ultra
+    region: frankfurt # ou: oregon, ohio, singapore, etc.
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+
+    # Health check
+    healthCheckPath: /health
+
+    # Variables d'environnement
+    envVars:
+      # Application
+      - key: APP_NAME
+        value: "Interventio API"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        sync: false
+
+      # Clé d'application (généré automatiquement au premier déploiement)
+      - key: APP_KEY
+        generateValue: true
+
+      # Base de données (PostgreSQL)
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromDatabase:
+          name: interventio-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: interventio-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: interventio-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: interventio-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: interventio-db
+          property: password
+
+      # Cache (file par défaut, Redis pour production)
+      - key: CACHE_STORE
+        value: file
+      - key: SESSION_DRIVER
+        value: file
+      - key: QUEUE_CONNECTION
+        value: sync
+
+      # Logging
+      - key: LOG_CHANNEL
+        value: stack
+      - key: LOG_LEVEL
+        value: error
+
+      # Sanctum
+      - key: SANCTUM_STATEFUL_DOMAINS
+        sync: false
+      - key: SESSION_DOMAIN
+        sync: false
+
+      # Mail (optionnel - configurer avec votre service)
+      # - key: MAIL_MAILER
+      #   value: smtp
+      # - key: MAIL_HOST
+      #   sync: false
+      # - key: MAIL_PORT
+      #   value: 587
+      # - key: MAIL_USERNAME
+      #   sync: false
+      # - key: MAIL_PASSWORD
+      #   sync: false
+      # - key: MAIL_ENCRYPTION
+      #   value: tls
+      # - key: MAIL_FROM_ADDRESS
+      #   sync: false
+      # - key: MAIL_FROM_NAME
+      #   value: "Interventio"
+
+    # Disque persistant pour storage
+    disk:
+      name: interventio-storage
+      mountPath: /var/www/html/storage
+      sizeGB: 1
+
+    # Autoscaling (optionnel, plans payants uniquement)
+    # scaling:
+    #   minInstances: 1
+    #   maxInstances: 3
+    #   targetMemoryPercent: 80
+    #   targetCPUPercent: 80
+
+# Base de données PostgreSQL
+databases:
+  - name: interventio-db
+    databaseName: interventio
+    plan: starter # Peut être: free, starter, standard, pro, pro plus, pro max, pro ultra
+    region: frankfurt
+    ipAllowList: [] # Vide = accessible depuis n'importe où
+
+    # PostgreSQL version
+    postgresMajorVersion: 16
+# Redis (optionnel, pour cache et queues en production)
+# - type: redis
+#   name: interventio-redis
+#   plan: starter
+#   region: frankfurt
+#   maxmemoryPolicy: allkeys-lru
+#   ipAllowList: []
+
