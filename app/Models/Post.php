@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\Translatable\HasTranslations;
@@ -39,31 +38,6 @@ class Post extends Model implements HasMedia
         'views_count'  => 'integer',
         'status'       => PostStatus::class,
     ];
-
-    /**
-     * Boot the model and generate slug automatically
-     */
-    protected static function boot(): void
-    {
-        parent::boot();
-
-        static::creating(function ($post) {
-            if (empty($post->slug)) {
-                $post->slug = static::generateUniqueSlug($post->getTranslation('title', app()->getLocale()));
-            }
-        });
-    }
-
-    /**
-     * Generate a unique slug
-     */
-    protected static function generateUniqueSlug(string $title): string
-    {
-        $slug = Str::slug($title);
-        $count = static::whereRaw("slug RLIKE '^{$slug}(-[0-9]+)?$'")->count();
-
-        return $count ? "{$slug}-{$count}" : $slug;
-    }
 
     /**
      * Configure media collections
