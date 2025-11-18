@@ -31,9 +31,6 @@ final class RoutingBootstrapper
         });
 
         $router->middleware('web')
-            ->group(base_path(path: 'routes/web/index.php'));
-
-        $router->middleware('web')
             ->group(base_path(path: 'routes/console/index.php'));
 
         $router->middleware('web')
