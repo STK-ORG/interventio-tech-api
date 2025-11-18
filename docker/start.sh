@@ -29,13 +29,28 @@ cd /var/www/html
 
 # Créer un fichier .env complet depuis les variables d'environnement Render
 echo "📝 Creating .env file from environment variables..."
+
+# Déterminer l'URL de l'application (forcer HTTPS en production)
+if [ "$APP_ENV" = "production" ] && [ -z "$APP_URL" ]; then
+    # En production sans APP_URL définie, essayer de détecter l'URL Render
+    if [ ! -z "$RENDER_EXTERNAL_URL" ]; then
+        APP_URL="$RENDER_EXTERNAL_URL"
+        echo "✅ Using RENDER_EXTERNAL_URL: $APP_URL"
+    else
+        APP_URL="https://localhost"
+        echo "⚠️  No APP_URL found, using https://localhost as fallback"
+    fi
+elif [ -z "$APP_URL" ]; then
+    APP_URL="http://localhost"
+fi
+
 cat > .env << EOF
 # Application
 APP_NAME="${APP_NAME:-Laravel}"
 APP_ENV=${APP_ENV:-production}
 APP_KEY=${APP_KEY:-}
 APP_DEBUG=${APP_DEBUG:-false}
-APP_URL=${APP_URL:-http://localhost}
+APP_URL=${APP_URL}
 
 # Database
 EOF
