@@ -1,0 +1,26 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 7
+
+    paths:
+        - app
+        - bootstrap
+        - config
+        - database
+        - public
+        - routes
+        - tests
+
+    excludePaths:
+        - bootstrap/cache/*
+        - storage/*
+        - vendor/*
+
+    # Configuration personnalisée
+    reportUnmatchedIgnoredErrors: false
+
+    # Ignorer certains types d'erreurs pour Laravel
+    ignoreErrors:
+        - '#Unsafe usage of new static#'
