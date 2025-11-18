@@ -40,7 +40,9 @@ EOF
 
 # Gérer DATABASE_URL si elle est fournie (format Render)
 if [ ! -z "$DATABASE_URL" ]; then
+    echo "DB_CONNECTION=${DB_CONNECTION:-pgsql}" >> .env
     echo "DATABASE_URL=${DATABASE_URL}" >> .env
+    echo "DB_URL=${DATABASE_URL}" >> .env
 else
     cat >> .env << EOF
 DB_CONNECTION=${DB_CONNECTION:-pgsql}
