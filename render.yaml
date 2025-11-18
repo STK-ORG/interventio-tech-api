@@ -33,6 +33,7 @@ services:
       # Base de données (PostgreSQL)
       - key: DB_CONNECTION
         value: pgsql
+      # Variables individuelles de la base de données
       - key: DB_HOST
         fromDatabase:
           name: interventio-db
