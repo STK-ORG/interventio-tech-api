@@ -17,9 +17,16 @@ class Localize
      */
     public function handle(Request $request, Closure $next): Response
     {
+        $availableLocales = config('app.available_locales', ['en', 'fr']);
+
         $locale = $request->hasHeader('Accept-Language')
             ? $request->header('Accept-Language')
-            : 'en';
+            : config('app.fallback_locale', 'en');
+
+        // Valider que la langue est supportée
+        if (!in_array($locale, $availableLocales)) {
+            $locale = config('app.fallback_locale', 'en');
+        }
 
         app()->setLocale($locale);
 
