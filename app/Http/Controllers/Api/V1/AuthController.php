@@ -361,13 +361,11 @@ class AuthController extends Controller
             'device_name'   => ['nullable', 'string', 'max:255'],
         ]);
 
-        // Extraire l'ID et le token du refresh_token
-        [$id, $token] = explode('|', $request->refresh_token, 2);
-
         // Trouver le token dans la base de données
         $tokenModel = \Laravel\Sanctum\PersonalAccessToken::findToken($request->refresh_token);
 
-        if (! $tokenModel || ! $tokenModel->can('refresh')) {
+        // Vérifier que c'est bien un refresh token (pas un access token avec abilities *)
+        if (! $tokenModel || ! $tokenModel->can('refresh') || $tokenModel->can('*')) {
             return response()->json([
                 'message' => __('auth.refresh_token_invalid'),
             ], 401);

@@ -54,7 +54,11 @@ class UserFactory extends Factory
     {
         return $this->state(fn(array $attributes) => [
             'account_type' => AccountType::PROFESSIONAL,
-        ]);
+        ])->afterCreating(function ($user): void {
+            \App\Models\ProfessionalProfile::factory()->create([
+                'user_id' => $user->id,
+            ]);
+        });
     }
 
     /**

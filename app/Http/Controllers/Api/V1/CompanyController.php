@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Company\StoreRequest;
 use App\Http\Requests\V1\Company\UpdateRequest;
 use App\Http\Resources\V1\CompanyResource;
+use App\Http\Traits\Cacheable;
 use App\Models\Company;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,8 +17,10 @@ use OpenApi\Annotations as OA;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
-class CompanyController extends Controller
+final class CompanyController extends Controller
 {
+    use Cacheable;
+
     /**
      * @OA\Get(
      *     path="/v1/companies",

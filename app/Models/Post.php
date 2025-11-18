@@ -43,6 +43,14 @@ class Post extends Model implements HasMedia
     ];
 
     /**
+     * Boot le modèle et ajoute un tri par défaut
+     */
+    protected static function booted(): void
+    {
+        // Pas d'ordre global car ça casse les autres queries
+    }
+
+    /**
      * Configure media collections
      */
     public function registerMediaCollections(): void

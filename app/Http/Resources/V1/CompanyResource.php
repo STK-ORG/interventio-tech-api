@@ -63,7 +63,7 @@ final class CompanyResource extends JsonResource
             'companyName' => $this->company_name,
             'cfeNumber'   => $this->cfe_number,
             'address'     => $this->address,
-            'description' => $this->description,
+            'description' => $this->getTranslations('description'),
             'isVerified'  => $this->is_verified,
             'verifiedAt'  => $this->when(
                 $this->verified_at !== null,

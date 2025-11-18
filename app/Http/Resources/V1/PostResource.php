@@ -67,9 +67,9 @@ final class PostResource extends JsonResource
     {
         return [
             'id'      => $this->id,
-            'title'   => $this->title,
+            'title'   => $this->getTranslations('title'),
             'slug'    => $this->slug,
-            'content' => $this->content,
+            'content' => $this->getTranslations('content'),
             'status'  => [
                 'value' => $this->status->value,
                 'label' => $this->status->label(),

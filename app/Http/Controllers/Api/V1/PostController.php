@@ -8,7 +8,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\Post\StoreRequest;
 use App\Http\Requests\V1\Post\UpdateRequest;
 use App\Http\Resources\V1\PostResource;
+use App\Http\Traits\Cacheable;
 use App\Models\Post;
+use App\Services\CacheService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -16,8 +18,10 @@ use OpenApi\Annotations as OA;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 
-class PostController extends Controller
+final class PostController extends Controller
 {
+    use Cacheable;
+
     /**
      * @OA\Get(
      *     path="/v1/posts",
@@ -86,22 +90,39 @@ class PostController extends Controller
      */
     public function index(Request $request): AnonymousResourceCollection
     {
-        $posts = QueryBuilder::for(Post::class)
-            ->allowedIncludes(['user'])
-            ->allowedFilters([
-                AllowedFilter::callback('search', function ($query, $value) {
-                    $locale = app()->getLocale();
-                    $query->where(function ($q) use ($value, $locale): void {
-                        $q->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(title, '$.{$locale}')) LIKE ?", ["%{$value}%"])
-                            ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(content, '$.{$locale}')) LIKE ?", ["%{$value}%"]);
-                    });
-                }),
-                AllowedFilter::exact('status'),
-                AllowedFilter::exact('user_id'),
-            ])
-            ->allowedSorts(['published_at', 'created_at', 'views_count'])
-            ->defaultSort('-published_at')
-            ->paginate($request->input('per_page', 15));
+        // Cache la liste des posts pour 5 minutes
+        $posts = $this->cacheList(
+            $request,
+            CacheService::PREFIX_POST,
+            function () use ($request) {
+                return QueryBuilder::for(Post::class)
+                    ->allowedIncludes(['user'])
+                    ->allowedFilters([
+                        AllowedFilter::callback('search', function ($query, $value) {
+                            $locale = app()->getLocale();
+                            $driver = config('database.default');
+
+                            $query->where(function ($q) use ($value, $locale, $driver): void {
+                                if ($driver === 'sqlite') {
+                                    // SQLite utilise json_extract (minuscule, sans UNQUOTE)
+                                    $q->whereRaw("json_extract(title, '$.{$locale}') LIKE ?", ["%{$value}%"])
+                                        ->orWhereRaw("json_extract(content, '$.{$locale}') LIKE ?", ["%{$value}%"]);
+                                } else {
+                                    // MySQL/PostgreSQL
+                                    $q->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(title, '$.{$locale}')) LIKE ?", ["%{$value}%"])
+                                        ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(content, '$.{$locale}')) LIKE ?", ["%{$value}%"]);
+                                }
+                            });
+                        }),
+                        AllowedFilter::exact('status'),
+                        AllowedFilter::exact('user_id'),
+                    ])
+                    ->allowedSorts(['published_at', 'created_at', 'views_count'])
+                    ->defaultSort('-published_at')
+                    ->paginate($request->input('per_page', 15));
+            },
+            CacheService::TTL_SHORT // 5 minutes car les posts changent souvent
+        );
 
         return PostResource::collection($posts);
     }
@@ -172,6 +193,9 @@ class PostController extends Controller
                     ->toMediaCollection('gallery');
             }
         }
+
+        // Invalider le cache des posts
+        $this->invalidateCache(CacheService::PREFIX_POST);
 
         return response()->json([
             'data'    => new PostResource($post->fresh()->load('user')),
@@ -313,6 +337,9 @@ class PostController extends Controller
             }
         }
 
+        // Invalider le cache des posts
+        $this->invalidateCache(CacheService::PREFIX_POST);
+
         return response()->json([
             'data'    => new PostResource($post->fresh()->load('user')),
             'message' => __('posts.updated'),
@@ -368,6 +395,9 @@ class PostController extends Controller
         $this->authorize('delete', $post);
 
         $post->delete();
+
+        // Invalider le cache des posts
+        $this->invalidateCache(CacheService::PREFIX_POST);
 
         return response()->json([
             'message' => __('posts.deleted'),
