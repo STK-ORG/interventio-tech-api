@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 
-// Route racine - retourner une réponse JSON avec lien vers la documentation
-Route::get('/', function () {
-    return response()->json([
+// Route racine - retourner une réponse JSON simple
+Route::get('/', function (): \Illuminate\Http\JsonResponse {
+    return \Illuminate\Support\Facades\Response::json([
         'status'  => 'ok',
         'message' => 'API is running',
-        'laravel' => app()->version(),
-        'documentation' => url('/documentation'),
-        'api' => url('/v1'),
     ]);
 });

@@ -22,6 +22,14 @@ final class RoutingBootstrapper
         $router->middleware('api')
             ->group(base_path(path: 'routes/api/index.php'));
 
+        // Route racine simple (sans middleware web pour éviter les problèmes de session)
+        $router->get('/', function (): \Illuminate\Http\JsonResponse {
+            return \Illuminate\Support\Facades\Response::json([
+                'status'  => 'ok',
+                'message' => 'API is running',
+            ]);
+        });
+
         $router->middleware('web')
             ->group(base_path(path: 'routes/web/index.php'));
 
