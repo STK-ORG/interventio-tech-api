@@ -25,10 +25,25 @@ chmod -R 775 /var/www/html/bootstrap/cache
 # Naviguer vers le répertoire de l'application
 cd /var/www/html
 
+# Créer un fichier .env minimal si nécessaire (pour les commandes artisan)
+if [ ! -f .env ]; then
+    echo "📝 Creating minimal .env file..."
+    echo "APP_ENV=${APP_ENV:-production}" > .env
+    echo "APP_DEBUG=${APP_DEBUG:-false}" >> .env
+fi
+
 # Générer la clé de l'application si elle n'existe pas
 if [ -z "$APP_KEY" ]; then
     echo "🔑 Generating application key..."
-    php artisan key:generate --force
+    php artisan key:generate --force --no-interaction
+else
+    echo "✅ Application key already set"
+    # Écrire APP_KEY dans le .env pour les commandes artisan
+    if grep -q "^APP_KEY=" .env 2>/dev/null; then
+        sed -i "s|^APP_KEY=.*|APP_KEY=${APP_KEY}|" .env
+    else
+        echo "APP_KEY=${APP_KEY}" >> .env
+    fi
 fi
 
 # Exécuter les migrations
