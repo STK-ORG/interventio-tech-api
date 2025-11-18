@@ -153,8 +153,11 @@ php artisan route:cache
 php artisan view:cache
 php artisan event:cache
 
-# Générer la documentation Swagger (si l5-swagger est installé)
+# Publier et générer la documentation Swagger (si l5-swagger est installé)
 if php artisan | grep -q "l5-swagger:generate"; then
+    echo "📚 Publishing Swagger assets..."
+    php artisan l5-swagger:publish --force
+
     echo "📚 Generating Swagger documentation..."
     php artisan l5-swagger:generate
 fi

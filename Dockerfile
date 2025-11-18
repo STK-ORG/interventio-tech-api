@@ -97,6 +97,10 @@ RUN mkdir -p /var/www/html/storage/framework/{sessions,views,cache} \
 # Copier l'application depuis le builder
 COPY --from=builder /var/www/html /var/www/html
 
+# Copier les assets Swagger UI dans public pour qu'ils soient accessibles
+RUN mkdir -p /var/www/html/public/docs/asset && \
+    cp -r /var/www/html/vendor/swagger-api/swagger-ui/dist/* /var/www/html/public/docs/asset/
+
 # Créer un utilisateur non-root
 RUN addgroup -g 1000 -S www && \
     adduser -u 1000 -S www -G www
