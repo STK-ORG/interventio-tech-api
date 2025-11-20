@@ -6,6 +6,7 @@ namespace App\Bootstrappers;
 
 use App\Http\Middleware\Localize;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 final class MiddlewareBootstrapper
 {
@@ -13,7 +14,11 @@ final class MiddlewareBootstrapper
     {
         $middleware->alias([]);
 
+        // Configurer CORS pour permettre les requêtes depuis Flutter
+        // Le middleware HandleCors est automatiquement inclus dans Laravel 12
+        // La configuration se fait via config/cors.php
         $middleware->api(prepend: [
+            \Illuminate\Http\Middleware\HandleCors::class,
             Localize::class,
         ]);
 
